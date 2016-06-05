@@ -21,9 +21,11 @@
 # gs:// URL for Google Cloud Storage location of redirector binary.
 gs_redirector=gs://rsc/go-import-redirector
 
-# Build redirector for linux/amd64 and copy to Google Cloud Storage
-install-redirector:
+go-import-redirector.linux:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -a -o go-import-redirector.linux .
+
+# Build redirector for linux/amd64 and copy to Google Cloud Storage
+install-redirector: go-import-redirector.linux
 	gsutil cp go-import-redirector.linux $(gs_redirector)
 
 # Start VM for rsc.io. The VM name is rsc-io, as is the name for the IP address
@@ -86,3 +88,5 @@ ssh-%:
 
 allow-http:
 	gcloud compute firewall-rules create http --description "Incoming http allowed." --allow tcp:80 tcp:443
+
+.PHONY: go-import-redirector.linux

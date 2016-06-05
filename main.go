@@ -68,6 +68,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"rsc.io/letsencrypt"
 )
 
 var (
@@ -111,16 +113,12 @@ func main() {
 		repoPath = strings.TrimSuffix(repoPath, "/*")
 	}
 	http.HandleFunc(strings.TrimSuffix(importPath, "/")+"/", redirect)
-	if *serveTLS {
-		host := importPath
-		if i := strings.Index(host, "/"); i >= 0 {
-			host = host[:i]
-		}
-		go func() {
-			log.Fatal(http.ListenAndServeTLS(":https", host+".crt", host+".key", nil))
-		}()
+
+	var m letsencrypt.Manager
+	if err := m.CacheFile("letsencrypt.cache"); err != nil {
+		log.Fatal(err)
 	}
-	log.Fatal(http.ListenAndServe(*addr, nil))
+	log.Fatal(m.Serve())
 }
 
 var tmpl = template.Must(template.New("main").Parse(`<!DOCTYPE html>
